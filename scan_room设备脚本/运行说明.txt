@@ -1,0 +1,51 @@
+========================================
+scan_room 设备脚本 · 运行说明
+室内空间速测与 GIS 分析技能
+========================================
+
+【脚本作用】
+room-scanner.py 是部署在 Agnes Harness（AGH）平台 MHS 设备框架上的
+"房间扫描"工具脚本。它在 AGH 会话中注册为设备 room-scanner-01，
+向平台暴露以下工具：
+  - scan_room ：控制手机摄像头 360° 缓慢扫摄 30 秒，
+                CLIP 模型自动挑选 9 张最具区分度的关键帧，
+                拼合成 3×3 全景图（视图中可见）
+  - read_device / watch_device ：读取设备状态与全景画面
+                （由 AGH MHS 设备框架自动提供）
+
+【文件清单】
+  room-scanner.py   主脚本（scan_room 工具实现）
+  agnes_mhs\        AGH MHS 设备框架 Python 包（Device 类等）
+  pyproject.toml    依赖声明（opencv-python / pillow / torch /
+                    transformers / websockets / agnes_mhs）
+  README-mhs包说明.md  MHS 包官方说明
+
+【运行环境】
+  - Windows 10/11 + Python 3.10
+  - 手机端 DroidCam 客户端（或任意可用摄像头，脚本优先取 index 1）
+  - Agnes Harness 平台已启动（Hub 端口 4180）
+
+【运行步骤】
+1. 安装依赖（任选一种）：
+   a) uv：uv sync（在脚本目录执行）
+   b) pip：pip install -e . opencv-python pillow torch transformers
+2. 启动 Agnes Harness 平台（在 agnes-harness 仓库目录）：
+   $env:AGNES_HUB_ORIGIN="http://127.0.0.1:4180"
+   node .\packages\cli\dist\local\agnes.mjs serve
+   （Web 工作台 http://127.0.0.1:4177，Hub 4180）
+3. 启动设备脚本（本目录）：
+   python room-scanner.py ws://127.0.0.1:4180
+   正常输出：
+   [scanner] loading CLIP...
+   [scanner] CLIP ready
+   [scanner] placeholder sent
+   [scanner] camera opened at index 1
+4. 浏览器打开 http://127.0.0.1:4177，新建会话，
+   下达"扫描房间"任务 → 模型调用 scan_room 工具，
+   手机缓慢旋转 360° 约 30 秒 → 得到 3×3 关键帧全景。
+
+【说明】
+- 脚本通过 AGH Hub（ws://127.0.0.1:4180）与平台双向通信；
+  设备在 Web 工作台显示为 "room-scanner-01 (Room Scanner phone)"。
+- 所有工具调用过程均记录在 AGH 会话事件流（sessions.db），
+  可配合《运行与验证证据》目录逐条核查。
